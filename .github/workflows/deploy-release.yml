@@ -1,0 +1,57 @@
+name: Deploy — Release
+
+on:
+  push:
+    branches: [release]
+
+jobs:
+  deploy:
+    name: Deploy to release
+    runs-on: self-hosted
+    environment: release
+
+    steps:
+      - name: Checkout release env
+        run: |
+          if [ ! -d /opt/rip/release/railway-iot-platform ]; then
+            git clone --recurse-submodules https://github.com/${{ github.repository }}.git /opt/rip/release/railway-iot-platform
+          else
+            cd /opt/rip/release/railway-iot-platform
+            git fetch origin
+            git checkout release
+            git pull origin release
+            git submodule update --init --recursive
+          fi
+
+      - name: Write .env
+        working-directory: /opt/rip/release/railway-iot-platform/railway-iot-infra
+        run: |
+          cat > .env << 'EOF'
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DEBUG=False
+          ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+          MQTT_HOST=mqtt
+          MQTT_PORT=1883
+          MQTT_TOPIC=rail/#
+          REDIS_URL=redis://:${{ secrets.REDIS_PASSWORD }}@redis:6379/0
+          DB_NAME=railway_db
+          DB_USER=railway
+          DB_HOST=db
+          DB_PORT=5432
+          NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+          NEXT_PUBLIC_WS_URL=${{ secrets.NEXT_PUBLIC_WS_URL }}
+          EOF
+
+      - name: Build and restart
+        working-directory: /opt/rip/release/railway-iot-platform/railway-iot-infra
+        run: |
+          docker compose build
+          docker compose up -d
+
+      - name: Health check
+        run: |
+          sleep 20
+          curl -f http://localhost:8003/api/v1/alerts/ || exit 1
+          echo "Deploy release OK"

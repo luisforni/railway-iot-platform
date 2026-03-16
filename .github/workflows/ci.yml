@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, release]
+  pull_request:
+    branches: [main, develop, release]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install linting tools
+        run: pip install flake8 black isort
+
+      - name: flake8
+        run: flake8 railway-iot-django-api/src --max-line-length=120 --exclude=migrations
+
+      - name: black
+        run: black --check railway-iot-django-api/src
+
+      - name: isort
+        run: isort --check-only railway-iot-django-api/src
+
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build all images
+        working-directory: railway-iot-infra
+        run: docker compose build
+        env:
+          DB_PASSWORD: ci_test
+          REDIS_PASSWORD: ci_test
+          SECRET_KEY: ci_test_secret_key_not_for_production
+          DEBUG: "True"
+          ALLOWED_HOSTS: localhost
+          NEXT_PUBLIC_API_URL: http://localhost:8003
+          NEXT_PUBLIC_WS_URL: ws://localhost:8003

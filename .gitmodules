@@ -1,0 +1,24 @@
+[submodule "mqtt-broker-service"]
+	path = railway-iot-mqtt-broker
+	url = https://github.com/luisforni/railway-iot-mqtt-broker.git
+[submodule "django-api-service"]
+	path = railway-iot-django-api
+	url = https://github.com/luisforni/railway-iot-django-api.git
+[submodule "celery-worker-service"]
+	path = railway-iot-celery-worker
+	url = https://github.com/luisforni/railway-iot-celery-worker.git
+[submodule "ml-engine-service"]
+	path = railway-iot-ml-engine
+	url = https://github.com/luisforni/railway-iot-ml-engine.git
+[submodule "timescale-db-service"]
+	path = railway-iot-timescale-db
+	url = https://github.com/luisforni/railway-iot-timescale-db.git
+[submodule "nextjs-dashboard"]
+	path = railway-iot-dashboard
+	url = https://github.com/luisforni/railway-iot-dashboard.git
+[submodule "sensor-simulator"]
+	path = railway-iot-sensor-simulator
+	url = https://github.com/luisforni/railway-iot-sensor-simulator.git
+[submodule "infra-docker"]
+	path = railway-iot-infra
+	url = https://github.com/luisforni/railway-iot-infra.git

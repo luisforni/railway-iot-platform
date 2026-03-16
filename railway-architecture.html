@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Railway IoT Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #090c10;
+    --bg2: #0d1117;
+    --panel: #111720;
+    --border: #1e2d3d;
+    --accent: #f0a500;
+    --accent2: #00c2ff;
+    --accent3: #00e5a0;
+    --danger: #ff4757;
+    --text: #c9d1d9;
+    --text-dim: #58697a;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,194,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,194,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 60px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px;
+    gap: 24px;
+  }
+
+  .header-left {}
+
+  .sys-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent2);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sys-tag::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: #fff;
+  }
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 12px;
+    letter-spacing: 1px;
+  }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 2px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge-accent { background: rgba(240,165,0,0.15); color: var(--accent); border: 1px solid rgba(240,165,0,0.3); }
+  .badge-blue { background: rgba(0,194,255,0.1); color: var(--accent2); border: 1px solid rgba(0,194,255,0.2); }
+  .badge-green { background: rgba(0,229,160,0.1); color: var(--accent3); border: 1px solid rgba(0,229,160,0.2); }
+
+  /* SECTION TITLE */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* LAYER SYSTEM */
+  .arch-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 48px;
+  }
+
+  .layer {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0;
+    min-height: 110px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .layer:hover { border-color: rgba(0,194,255,0.3); }
+
+  .layer-label {
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+
+  .layer-number {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .layer-name {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+    color: #fff;
+  }
+
+  .layer-tech {
+    font-family: var(--mono);
+    font-size: 9px;
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  .layer-content {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* COLOR THEMES per layer */
+  .l1 .layer-label { border-left: 3px solid #ff6b35; }
+  .l1 .layer-tech { color: #ff6b35; }
+  .l2 .layer-label { border-left: 3px solid var(--accent); }
+  .l2 .layer-tech { color: var(--accent); }
+  .l3 .layer-label { border-left: 3px solid var(--accent2); }
+  .l3 .layer-tech { color: var(--accent2); }
+  .l4 .layer-label { border-left: 3px solid var(--accent3); }
+  .l4 .layer-tech { color: var(--accent3); }
+  .l5 .layer-label { border-left: 3px solid #a78bfa; }
+  .l5 .layer-tech { color: #a78bfa; }
+  .l6 .layer-label { border-left: 3px solid #fb7185; }
+  .l6 .layer-tech { color: #fb7185; }
+
+  /* CARDS inside layers */
+  .node {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    min-width: 120px;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .node:hover { border-color: currentColor; }
+
+  .node-icon {
+    font-size: 18px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .node-title {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+  }
+
+  .node-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .node-tag {
+    position: absolute;
+    top: 6px; right: 6px;
+    font-family: var(--mono);
+    font-size: 8px;
+    padding: 1px 5px;
+    border-radius: 1px;
+    letter-spacing: 1px;
+  }
+
+  .tag-new { background: rgba(0,229,160,0.15); color: var(--accent3); }
+  .tag-core { background: rgba(240,165,0,0.15); color: var(--accent); }
+  .tag-ext { background: rgba(0,194,255,0.1); color: var(--accent2); }
+
+  /* ARROW CONNECTORS */
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    position: relative;
+  }
+  .flow-arrow::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, var(--border), transparent);
+  }
+  .flow-arrow-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    background: var(--bg);
+    padding: 2px 8px;
+    letter-spacing: 2px;
+    z-index: 1;
+    border: 1px solid var(--border);
+  }
+
+  /* DATA FLOW SECTION */
+  .flow-section {
+    margin-bottom: 48px;
+  }
+
+  .flow-title {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.5px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .flow-title::before {
+    content: '';
+    display: inline-block;
+    width: 3px; height: 20px;
+    background: var(--accent2);
+  }
+
+  .flow-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .flow-step {
+    background: var(--panel);
+    padding: 20px 16px;
+    position: relative;
+  }
+  .flow-step:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent2);
+    font-size: 14px;
+    z-index: 2;
+    background: var(--panel);
+    padding: 2px;
+  }
+
+  .step-num {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .step-name {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .step-detail {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .step-proto {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 1px;
+    margin-top: 8px;
+  }
+
+  /* TECH STACK GRID */
+  .stack-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .stack-card {
+    background: var(--panel);
+    padding: 20px;
+  }
+
+  .stack-category {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .stack-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .stack-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .stack-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .stack-item-name {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: #dde;
+  }
+  .stack-item-role {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  /* METRICS ROW */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .metric-card {
+    background: var(--panel);
+    padding: 20px 18px;
+    text-align: center;
+  }
+
+  .metric-val {
+    font-family: var(--sans);
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* DEPLOYMENT SECTION */
+  .deploy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  @media (max-width: 640px) {
+    .deploy-grid { grid-template-columns: 1fr; }
+    .flow-steps { grid-template-columns: 1fr; }
+    header { flex-direction: column; }
+    .header-right { align-items: flex-start; }
+    .layer { grid-template-columns: 110px 1fr; }
+  }
+
+  .deploy-card {
+    background: var(--panel);
+    padding: 24px;
+  }
+
+  .deploy-header {
+    font-family: var(--sans);
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .deploy-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .deploy-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .deploy-item-icon { flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    gap: 16px;
+  }
+
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .footer-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 10px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    border-radius: 1px;
+    letter-spacing: 1px;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .layer {
+    animation: fadeInUp 0.4s ease both;
+  }
+  .layer:nth-child(1) { animation-delay: 0.05s; }
+  .layer:nth-child(2) { animation-delay: 0.1s; }
+  .layer:nth-child(3) { animation-delay: 0.15s; }
+  .layer:nth-child(4) { animation-delay: 0.2s; }
+  .layer:nth-child(5) { animation-delay: 0.25s; }
+  .layer:nth-child(6) { animation-delay: 0.3s; }
+
+  .scanline {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,194,255,0.4), transparent);
+    animation: scan 6s linear infinite;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  @keyframes scan {
+    from { top: -2px; }
+    to { top: 100vh; }
+  }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <div class="sys-tag">SYS-ARCH v2.5 // FERROVIARIO</div>
+      <h1>RAILWAY<br><span>IOT PLATFORM</span></h1>
+      <p class="subtitle">// IoT · MQTT · Django · Monitoreo Predictivo Ferroviario</p>
+    </div>
+    <div class="header-right">
+      <span class="badge badge-green">● PRODUCCIÓN READY</span>
+      <span class="badge badge-blue">MQTT 5.0</span>
+      <span class="badge badge-accent">DJANGO 5.x</span>
+    </div>
+  </header>
+
+  <!-- ARCHITECTURE LAYERS -->
+  <div class="section-label">// CAPAS DE ARQUITECTURA</div>
+  <div class="arch-container">
+
+    <!-- LAYER 1: FIELD -->
+    <div class="layer l1">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 01</div>
+        <div class="layer-name">CAMPO<br>FÍSICO</div>
+        <div class="layer-tech">Hardware IoT</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(255,107,53,0.3); color:#ff6b35">
+          <span class="node-icon">🌡️</span>
+          <div class="node-title">Sensores de Vía</div>
+          <div class="node-sub">Temp · Vibración · Deformación</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+        <div class="node" style="border-color:rgba(255,107,53,0.3); color:#ff6b35">
+          <span class="node-icon">📡</span>
+          <div class="node-title">GPS Vagones</div>
+          <div class="node-sub">Posición · Velocidad · Carga</div>
+        </div>
+        <div class="node" style="border-color:rgba(255,107,53,0.3); color:#ff6b35">
+          <span class="node-icon">⚡</span>
+          <div class="node-title">Sensores Motor</div>
+          <div class="node-sub">RPM · Presión · Consumo</div>
+        </div>
+        <div class="node" style="border-color:rgba(255,107,53,0.3); color:#ff6b35">
+          <span class="node-icon">🚦</span>
+          <div class="node-title">Señalización</div>
+          <div class="node-sub">Estado paso a nivel</div>
+        </div>
+        <div class="node" style="border-color:rgba(255,107,53,0.2); color:#ff6b35; opacity:0.6">
+          <span class="node-icon">🔲</span>
+          <div class="node-title">Edge Gateway</div>
+          <div class="node-sub">ESP32 / Raspberry Pi</div>
+          <span class="node-tag tag-new">EDGE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER 2: TRANSPORT -->
+    <div class="layer l2">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 02</div>
+        <div class="layer-name">TRANS-<br>PORTE</div>
+        <div class="layer-tech">MQTT 5.0</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(240,165,0,0.3); color:var(--accent)">
+          <span class="node-icon">🔀</span>
+          <div class="node-title">Mosquitto Broker</div>
+          <div class="node-sub">MQTT Broker · TLS 1.3</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+        <div class="node" style="border-color:rgba(240,165,0,0.3); color:var(--accent)">
+          <span class="node-icon">📋</span>
+          <div class="node-title">Topic Schema</div>
+          <div class="node-sub">rail/&lt;zone&gt;/&lt;device&gt;/&lt;metric&gt;</div>
+        </div>
+        <div class="node" style="border-color:rgba(240,165,0,0.3); color:var(--accent)">
+          <span class="node-icon">🔐</span>
+          <div class="node-title">Auth + ACLs</div>
+          <div class="node-sub">mTLS · Device Certs</div>
+        </div>
+        <div class="node" style="border-color:rgba(240,165,0,0.3); color:var(--accent)">
+          <span class="node-icon">📦</span>
+          <div class="node-title">QoS Levels</div>
+          <div class="node-sub">QoS 1 alertas · QoS 0 telemetría</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER 3: INGESTION -->
+    <div class="layer l3">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 03</div>
+        <div class="layer-name">INGES-<br>TIÓN</div>
+        <div class="layer-tech">Django + Channels</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(0,194,255,0.3); color:var(--accent2)">
+          <span class="node-icon">🔌</span>
+          <div class="node-title">MQTT Consumer</div>
+          <div class="node-sub">paho-mqtt · async subscriber</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+        <div class="node" style="border-color:rgba(0,194,255,0.3); color:var(--accent2)">
+          <span class="node-icon">⚙️</span>
+          <div class="node-title">Celery Workers</div>
+          <div class="node-sub">Procesamiento async de mensajes</div>
+        </div>
+        <div class="node" style="border-color:rgba(0,194,255,0.3); color:var(--accent2)">
+          <span class="node-icon">🚀</span>
+          <div class="node-title">Redis</div>
+          <div class="node-sub">Broker de tareas · Cache L1</div>
+        </div>
+        <div class="node" style="border-color:rgba(0,194,255,0.3); color:var(--accent2)">
+          <span class="node-icon">📡</span>
+          <div class="node-title">Django Channels</div>
+          <div class="node-sub">WebSocket push → frontend</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER 4: STORAGE -->
+    <div class="layer l4">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 04</div>
+        <div class="layer-name">ALMA-<br>CENAMIENTO</div>
+        <div class="layer-tech">PostgreSQL + TimescaleDB</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(0,229,160,0.3); color:var(--accent3)">
+          <span class="node-icon">🗄️</span>
+          <div class="node-title">TimescaleDB</div>
+          <div class="node-sub">Time-series · Compresión automática</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+        <div class="node" style="border-color:rgba(0,229,160,0.3); color:var(--accent3)">
+          <span class="node-icon">🗃️</span>
+          <div class="node-title">PostgreSQL</div>
+          <div class="node-sub">Entidades · Config · Usuarios</div>
+        </div>
+        <div class="node" style="border-color:rgba(0,229,160,0.3); color:var(--accent3)">
+          <span class="node-icon">⚡</span>
+          <div class="node-title">Redis Cache</div>
+          <div class="node-sub">Estado en tiempo real · Sessions</div>
+        </div>
+        <div class="node" style="border-color:rgba(0,229,160,0.3); color:var(--accent3)">
+          <span class="node-icon">📁</span>
+          <div class="node-title">MinIO / S3</div>
+          <div class="node-sub">Archivos · Reportes PDF</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER 5: PROCESSING -->
+    <div class="layer l5">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 05</div>
+        <div class="layer-name">PROCE-<br>SAMIENTO</div>
+        <div class="layer-tech">ML + Django REST</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(167,139,250,0.3); color:#a78bfa">
+          <span class="node-icon">🧠</span>
+          <div class="node-title">Motor ML</div>
+          <div class="node-sub">Anomaly Detection · Isolation Forest</div>
+          <span class="node-tag tag-new">ML</span>
+        </div>
+        <div class="node" style="border-color:rgba(167,139,250,0.3); color:#a78bfa">
+          <span class="node-icon">⚠️</span>
+          <div class="node-title">Motor de Alertas</div>
+          <div class="node-sub">Reglas configurables · Umbrales</div>
+        </div>
+        <div class="node" style="border-color:rgba(167,139,250,0.3); color:#a78bfa">
+          <span class="node-icon">🔧</span>
+          <div class="node-title">Mantenimiento</div>
+          <div class="node-sub">MTBF · Órdenes de trabajo</div>
+        </div>
+        <div class="node" style="border-color:rgba(167,139,250,0.3); color:#a78bfa">
+          <span class="node-icon">🌐</span>
+          <div class="node-title">Django REST API</div>
+          <div class="node-sub">DRF · JWT · OpenAPI 3.0</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- LAYER 6: PRESENTATION -->
+    <div class="layer l6">
+      <div class="layer-label">
+        <div class="layer-number">CAPA 06</div>
+        <div class="layer-name">PRESEN-<br>TACIÓN</div>
+        <div class="layer-tech">React / Next.js</div>
+      </div>
+      <div class="layer-content">
+        <div class="node" style="border-color:rgba(251,113,133,0.3); color:#fb7185">
+          <span class="node-icon">📊</span>
+          <div class="node-title">Dashboard RT</div>
+          <div class="node-sub">Mapa · Gráficos · KPIs en vivo</div>
+          <span class="node-tag tag-core">CORE</span>
+        </div>
+        <div class="node" style="border-color:rgba(251,113,133,0.3); color:#fb7185">
+          <span class="node-icon">🗺️</span>
+          <div class="node-title">Mapa Ferroviario</div>
+          <div class="node-sub">Leaflet.js · Rutas · Trenes live</div>
+        </div>
+        <div class="node" style="border-color:rgba(251,113,133,0.3); color:#fb7185">
+          <span class="node-icon">📱</span>
+          <div class="node-title">Mobile PWA</div>
+          <div class="node-sub">Alertas push · Offline support</div>
+        </div>
+        <div class="node" style="border-color:rgba(251,113,133,0.3); color:#fb7185">
+          <span class="node-icon">📄</span>
+          <div class="node-title">Reportes</div>
+          <div class="node-sub">PDF · CSV · Históricos</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- DATA FLOW -->
+  <div class="flow-section">
+    <div class="flow-title">FLUJO DE DATOS</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-num">PASO 01</div>
+        <div class="step-name">Sensor Publica</div>
+        <div class="step-detail">Simulador publica en rail/&lt;zone&gt;/&lt;device&gt;/&lt;metric&gt; cada 500ms — payload JSON con timestamp ISO8601</div>
+        <span class="step-proto" style="background:rgba(255,107,53,0.1);color:#ff6b35;border:1px solid rgba(255,107,53,0.2)">MQTT PUBLISH</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">PASO 02</div>
+        <div class="step-name">Broker Enruta</div>
+        <div class="step-detail">Mosquitto valida cert, aplica ACL y distribuye a subscribers</div>
+        <span class="step-proto" style="background:rgba(240,165,0,0.1);color:var(--accent);border:1px solid rgba(240,165,0,0.2)">TLS 1.3</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">PASO 03</div>
+        <div class="step-name">Consumer Ingesta</div>
+        <div class="step-detail">paho-mqtt recibe, encola persist_reading en Celery via Redis</div>
+        <span class="step-proto" style="background:rgba(0,194,255,0.1);color:var(--accent2);border:1px solid rgba(0,194,255,0.2)">ASYNC TASK</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">PASO 04</div>
+        <div class="step-name">Persiste + ML</div>
+        <div class="step-detail">persist_reading inserta en TimescaleDB y despacha check_threshold_alert</div>
+        <span class="step-proto" style="background:rgba(0,229,160,0.1);color:var(--accent3);border:1px solid rgba(0,229,160,0.2)">TIMESERIES</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">PASO 05</div>
+        <div class="step-name">Push al Cliente</div>
+        <div class="step-detail">Django Channels (Redis layer) empuja via WebSocket — dashboard muestra lectura en &lt;500ms</div>
+        <span class="step-proto" style="background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.2)">WEBSOCKET</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH STACK -->
+  <div class="flow-title">TECH STACK COMPLETO</div>
+  <div class="stack-grid" style="margin-bottom:48px">
+    <div class="stack-card">
+      <div class="stack-category">// Backend</div>
+      <div class="stack-items">
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#44b883"></div>
+          <div class="stack-item-name">Django 5.x</div>
+          <div class="stack-item-role">ORM · Auth · Admin</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#009688"></div>
+          <div class="stack-item-name">Django REST Framework</div>
+          <div class="stack-item-role">API · Serializers</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:var(--accent2)"></div>
+          <div class="stack-item-name">Django Channels</div>
+          <div class="stack-item-role">WebSocket · ASGI</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#c8e6c9"></div>
+          <div class="stack-item-name">Celery + Beat</div>
+          <div class="stack-item-role">Tareas · Cron jobs</div>
+        </div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-category">// IoT / Transporte</div>
+      <div class="stack-items">
+        <div class="stack-item">
+          <div class="stack-dot" style="background:var(--accent)"></div>
+          <div class="stack-item-name">Mosquitto Broker</div>
+          <div class="stack-item-role">MQTT 5.0 server</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#ff9800"></div>
+          <div class="stack-item-name">paho-mqtt</div>
+          <div class="stack-item-role">Python subscriber</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#795548"></div>
+          <div class="stack-item-name">ESP32 / RPi</div>
+          <div class="stack-item-role">Edge devices</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#607d8b"></div>
+          <div class="stack-item-name">MicroPython</div>
+          <div class="stack-item-role">Firmware sensores</div>
+        </div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-category">// Datos</div>
+      <div class="stack-items">
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#336791"></div>
+          <div class="stack-item-name">PostgreSQL 16</div>
+          <div class="stack-item-role">DB principal</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:var(--accent3)"></div>
+          <div class="stack-item-name">TimescaleDB</div>
+          <div class="stack-item-role">Time-series extension</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#dc382d"></div>
+          <div class="stack-item-name">Redis 7</div>
+          <div class="stack-item-role">Cache · Broker</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#666"></div>
+          <div class="stack-item-name">MinIO</div>
+          <div class="stack-item-role">Object storage</div>
+        </div>
+      </div>
+    </div>
+    <div class="stack-card">
+      <div class="stack-category">// Frontend / Infra</div>
+      <div class="stack-items">
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#61dafb"></div>
+          <div class="stack-item-name">Next.js 14</div>
+          <div class="stack-item-role">Dashboard</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#56c596"></div>
+          <div class="stack-item-name">Leaflet.js</div>
+          <div class="stack-item-role">Mapas ferroviarios</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#2496ed"></div>
+          <div class="stack-item-name">Docker Compose</div>
+          <div class="stack-item-role">Contenedores</div>
+        </div>
+        <div class="stack-item">
+          <div class="stack-dot" style="background:#ffffff"></div>
+          <div class="stack-item-name">GitHub Actions</div>
+          <div class="stack-item-role">CI/CD · Self-hosted runner</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="flow-title">MÉTRICAS OBJETIVO</div>
+  <div class="metrics-row">
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent2)">500ms</div>
+      <div class="metric-label">Latencia sensor → dashboard</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent3)">10K</div>
+      <div class="metric-label">Mensajes MQTT / minuto</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:var(--accent)">99.9%</div>
+      <div class="metric-label">Uptime objetivo</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:#a78bfa">&lt;1s</div>
+      <div class="metric-label">WebSocket push latency</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-val" style="color:#fb7185">1 año</div>
+      <div class="metric-label">Retención de telemetría</div>
+    </div>
+  </div>
+
+  <!-- DEPLOYMENT -->
+  <div class="flow-title">ESTRATEGIA DE DEPLOY</div>
+  <div class="deploy-grid">
+    <div class="deploy-card">
+      <div class="deploy-header">🐳 Docker Compose (Desarrollo)</div>
+      <div class="deploy-items">
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>django + gunicorn + uvicorn (ASGI)</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>celery worker + celery beat</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>mosquitto broker (port 1883 / 8883 TLS)</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>postgres + timescaledb extension</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>redis 7 alpine</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>nginx reverse proxy</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>next.js frontend</div>
+      </div>
+    </div>
+    <div class="deploy-card">
+      <div class="deploy-header">☁️ Producción (Tu servidor / Cloud)</div>
+      <div class="deploy-items">
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Mismo stack, variables env por ambiente</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Nginx + Let's Encrypt SSL</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>TimescaleDB compression policies automáticas</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Backup diario a S3/MinIO con pgdump</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Prometheus + Grafana para métricas infra</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Portainer para gestión visual de contenedores</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>GitHub Actions · self-hosted runner Ubuntu 24.04</div>
+        <div class="deploy-item"><span class="deploy-item-icon">▸</span>Environments: develop → release → production</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-text">// RAILWAY IOT PLATFORM · ARCHITECTURE v2.5 · 2026</div>
+    <div class="footer-pills">
+      <span class="pill">MQTT 5.0</span>
+      <span class="pill">DJANGO 5.x</span>
+      <span class="pill">TIMESCALEDB</span>
+      <span class="pill">WEBSOCKET</span>
+      <span class="pill">ML READY</span>
+      <span class="pill">DOCKER</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
